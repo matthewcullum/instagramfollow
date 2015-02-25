@@ -1,8 +1,23 @@
 source 'https://rubygems.org'
 
+#api related
 gem 'instagram'
+
+#ui
 gem 'bootstrap-sass'
+
+#auth
 gem 'devise'
+gem 'omniauth'
+gem 'omniauth-instagram'
+gem 'oa-openid'
+
+#replace erb with haml
+gem 'haml-rails'
+gem 'haml'
+
+#jobs
+gem 'sucker_punch'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.0'
@@ -44,5 +59,7 @@ group :development, :test do
 
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
+
+  gem 'rspec-rails'
 end
 

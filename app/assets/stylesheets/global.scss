@@ -1,0 +1,16 @@
+@import "bootstrap-sprockets";
+@import "bootstrap";
+@import "variables";
+
+@import "home";
+
+body{
+ background: $cloudyWhite;
+}
+
+#login{
+  margin-top: 300px;
+  a{
+    @extend .btn,.btn-primary
+  }
+}
