@@ -4,11 +4,6 @@ class DashboardController < ApplicationController
   def index
   end
 
-  def search
-    search_term = params['search-term']
-    @search_results = @client.user_search search_term
-    end
-
   def add_to_queue
     FollowJob.new.async.perform('follow', @access_token)
     render text: params[:id]

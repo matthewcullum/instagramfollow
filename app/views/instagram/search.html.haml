@@ -1,0 +1,8 @@
+.container
+  - @search_results.each do |result|
+    .search-result
+      .col-xs-6.col-md-3
+        %h3.text-center= result.username
+        %a.thumbnail{"data-placement" => "top", "data-toggle" => "tooltip", href: "#{view_profile_path id: result.id}", :title => "Add to queue"}
+          = image_tag result.profile_picture
+

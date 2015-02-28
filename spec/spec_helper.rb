@@ -16,7 +16,16 @@
 # users commonly want.
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+require 'devise'
+require 'factory_girl_rails'
+require 'support/controller_macros'
+
 RSpec.configure do |config|
+  config.include Devise::TestHelpers, type: :controller
+  config.include FactoryGirl::Syntax::Methods
+
+  config.extend ControllerMacros, :type => :controller
+
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
   # assertions if you prefer.

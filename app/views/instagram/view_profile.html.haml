@@ -1,0 +1,10 @@
+.col-md-6.col-md-offset-3.panel.panel-primary
+  .col-md-8
+    %h1= @profile.username
+    %h3= @profile.bio
+  .col-md-4
+    =image_tag @profile.profile_picture, class: 'thumbnail'
+  %p.text-right
+    =link_to 'View on Instagram', "http://instagram.com/#{@profile.username}"
+  %p
+    =link_to 'Add to Queue', '', class: 'btn btn-success form-control'

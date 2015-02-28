@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class DashboardControllerTest < ActionController::TestCase
-  test "should get index" do
-    get :index
+  test "should get search" do
+    get :search
     assert_response :success
   end
 

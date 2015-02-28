@@ -1,13 +1,15 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { omniauth_callbacks: 'users/omniauth' }
 
-  root 'home#index'
-
-  scope 'dashboard' do
-    get '', to: 'dashboard#index'
-    get 's', to: 'dashboard#search', as: 'search'
-    get 'queue/add/:id', to: 'dashboard#add_to_queue', as: 'add_to_queue'
+  namespace :queue do
+    #get '/', to: 'job#search', as: 'job_index'
+    resources :job
   end
+
+  devise_for :users, controllers: {omniauth_callbacks: 'users/omniauth'}
+
+  root to: 'dashboard#index'
+  get 's', to: 'instagram#search', as: 'search'
+  get 's/view/:id', to: 'instagram#view_profile', as: 'view_profile'
 
   # if Rails.env.development?
   #   get '/limits', to: 'sessions#view_instagram_api_limits'
@@ -19,7 +21,7 @@ end
 # See how all your routes lay out with "rake routes".
 
 # You can have the root of your site routed with "root"
-# root 'welcome#index'
+# root 'welcome#search'
 
 # Example of regular route:
 #   get 'products/:id' => 'catalog#view'
