@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-
+gem 'rails_12factor'
 #api related
 gem 'instagram'
 
