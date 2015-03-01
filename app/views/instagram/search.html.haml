@@ -3,5 +3,6 @@
     .search-result
       .col-xs-6.col-md-3
         %h3.text-center= result.username
+        %h4.text-center= "#{number_with_delimiter(result[:counts][:followed_by])} followers"
         =link_to image_tag(result.profile_picture), view_profile_path(result.id.to_s), class: 'thumbnail'
 
