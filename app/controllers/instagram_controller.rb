@@ -7,10 +7,9 @@ class InstagramController < ApplicationController
   end
 
   def view_profile
-    #@profile = @client.user(params[:id])
-    @profile = @client.user(1510554860)
-    #byebug
-    FollowJob.perform_now @profile, current_user, @access_token
+    @profile = @client.user(params[:id])
+    @followed_by_count = @profile.counts.followed_by
+    #@profile = @client.user(1510554860)
   end
 
   def limits

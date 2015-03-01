@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   root to: 'dashboard#index'
   get 's', to: 'instagram#search', as: 'search'
   get 'viewprofile/:id', to: 'instagram#view_profile', as: 'view_profile'
+  post '/jobs/follow', to: 'job#follow', as: 'new_follow_job'
 
 
   if Rails.env.development?
