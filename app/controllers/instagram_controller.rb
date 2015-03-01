@@ -8,5 +8,9 @@ class InstagramController < ApplicationController
 
   def view_profile
     @profile = @client.user(params[:id])
+    #byebug
+    FollowJob.perform_later 1286440299, @access_token
+
+
   end
 end

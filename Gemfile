@@ -16,8 +16,10 @@ gem 'oa-openid'
 gem 'haml-rails'
 gem 'haml'
 
+gem 'redis'
+
 #jobs
-gem 'sucker_punch'
+gem 'sidekiq'
 
 gem 'dotenv-rails'
 

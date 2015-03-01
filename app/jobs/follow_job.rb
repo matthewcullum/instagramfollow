@@ -1,13 +1,11 @@
-class FollowJob
-  include SuckerPunch::Job
+class FollowJob < ActiveJob::Base
+  queue_as :default
 
-  def perform(id, access_token)
+  def perform(user_id, instagram_token, *args)
+    options = args.extract_options!
 
-    ActiveRecord::Base.connection_pool.with_connection do
-      client = Instagram.client(access_token: access_token)
-      client.user_followed_by
-      users = User.first
-      Rails.logger.info users
-    end
+    client = Instagram.client access_token: instagram_token
+    user_followed_by = client.user_followed_by user_id
+
   end
 end
