@@ -8,7 +8,7 @@ class ApplicationController < ActionController::Base
     @queue = 2
     unless current_user.nil?
       @access_token = current_user[:oauth_token]
-      @client = Instagram.client(access_token: @access_token)
+      @client = Instagram.client client_id: ENV['INSTAGRAM_API_KEY'], client_secret: ENV['INSTAGRAM_SECRET_KEY'], client_ips: '127.0.0.1', access_token: instagram_token
     end
   end
 end

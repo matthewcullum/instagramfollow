@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
+
 gem 'rails_12factor'
+
 #api related
 gem 'instagram'
 
@@ -22,6 +24,11 @@ gem 'redis'
 gem 'sidekiq'
 
 gem 'dotenv-rails'
+
+# user passenger as the websever
+gem 'passenger'
+
+gem 'sinatra'
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
 gem 'rails', '4.2.0'

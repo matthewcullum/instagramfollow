@@ -9,12 +9,17 @@ Rails.application.routes.draw do
 
   root to: 'dashboard#index'
   get 's', to: 'instagram#search', as: 'search'
-  get 's/view/:id', to: 'instagram#view_profile', as: 'view_profile'
+  get 'viewprofile/:id', to: 'instagram#view_profile', as: 'view_profile'
 
-  # if Rails.env.development?
-  #   get '/limits', to: 'sessions#view_instagram_api_limits'
-  #   get '/playground', to: 'dashboard#playground'
-  # end
+
+  if Rails.env.development?
+    require 'sidekiq/web'
+    mount Sidekiq::Web => '/sidekiq'
+    get '/limits', to: 'instagram#limits', as: 'limits'
+
+    #   get '/limits', to: 'sessions#view_instagram_api_limits'
+    #   get '/playground', to: 'dashboard#playground'
+  end
 end
 
 # The priority is based upon order of creation: first created -> highest priority.
