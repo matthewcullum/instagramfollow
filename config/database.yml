@@ -80,6 +80,5 @@ test:
 #
 production:
   <<: *default
-  database: instagramfollow
   database_url: <%= ENV['DATABASE_URL'] %>
   #password: <%= ENV['INSTAGRAMFOLLOW_DATABASE_PASSWORD'] %>
