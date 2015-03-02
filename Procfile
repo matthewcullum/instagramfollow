@@ -1,2 +1,2 @@
-server: bundle exec passenger start --p $PORT
+server: bundle exec passenger start
 workers: bundle exec sidekiq
