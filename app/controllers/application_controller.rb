@@ -5,7 +5,6 @@ class ApplicationController < ActionController::Base
   before_filter :authenticate_user!, :init
 
   def init
-    @queue = 2
     unless current_user.nil?
       @access_token = current_user[:oauth_token]
 

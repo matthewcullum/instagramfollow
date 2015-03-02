@@ -1,19 +1,4 @@
 -if @error
   %h1.text-center= @error
 -else
-  .col-md-6.col-md-offset-3.panel.panel-primary
-    .col-md-8
-      %h1
-        =@profile.username
-        %br
-        %small= "#{@followed_by_count} followers"
-      %h3= @profile.bio
-    .col-md-4
-      =image_tag @profile.profile_picture, class: 'thumbnail'
-    %p.text-right
-      =link_to 'View on Instagram', "http://instagram.com/#{@profile.username}", class: 'text-left'
-      =link_to 'back', :back, class: 'btn btn-info'
-    %p
-      =form_tag new_follow_job_path do |f|
-        =hidden_field_tag 'id', @profile.id
-        =submit_tag 'Add to Queue', class: 'btn btn-success form-control'
+  =render 'instagram/profile'

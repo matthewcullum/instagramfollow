@@ -23,7 +23,7 @@
             %li
               = link_to queue_job_index_path do
                 Current queue
-                %span.badge= @queue
+                %span.badge= @queue_count
           %ul.nav.navbar-nav.navbar-right
             = form_tag search_path, method: :get, class: 'navbar-form navbar-left', role: 'search' do
               .form-group

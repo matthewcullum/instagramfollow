@@ -2,11 +2,8 @@ class DashboardController < ApplicationController
   layout 'dashboard'
 
   def index
-  end
-
-  def add_to_queue
-    FollowJob.new.async.perform('follow', @access_token)
-    render text: params[:id]
+    @queue = Follow.all
+    @queue_count = @queue.count
   end
 
   def playground

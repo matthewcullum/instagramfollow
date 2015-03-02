@@ -1,0 +1,13 @@
+.container
+  -if @queue.count > 0
+    -@queue.each do |job|
+      -@job = job
+      -@profile = @client.user(job.chosen_user_id)
+      = render 'dashboard/queue_item'
+  -else
+    .jumbotron
+      %h3.text-center
+        The job queue is currently empty
+        %br/
+        Please use the search bar above to get started
+

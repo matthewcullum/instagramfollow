@@ -1,0 +1,31 @@
+.col-md-10.col-md-offset-1.panel.panel-primary
+  .col-md-9
+    %h1
+      =@profile.username
+      %br
+      %small= "#{@followed_by_count} followers"
+    %h3= @profile.bio
+  .col-md-3
+    =image_tag @profile.profile_picture, class: 'thumbnail'
+  .col-md-12
+    %table.table.table-bordered
+      %tr
+        %td
+          Follow count
+        %td= @job.follow_count
+      %tr
+        %td
+          Unfollow count
+        %td= @job.unfollow_count
+      %tr
+        %td
+          Total followers
+        %td= @job.total_followers
+      %tr
+        %td
+          Current status
+        %td= @job.status
+  %p
+    =form_tag new_follow_job_path do |f|
+      =hidden_field_tag 'id', @profile.id
+      =submit_tag 'Cancel', class: 'btn btn-danger form-control'
