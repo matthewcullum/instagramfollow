@@ -5,6 +5,4 @@
 #
 #   cities = City.create([{ name: 'Chicago' }, { name: 'Copenhagen' }])
 #   Mayor.create(name: 'Emanuel', city: cities.first)
-5.times do
-  Job.create uid: 'aosidja'
-end
+
