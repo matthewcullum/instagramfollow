@@ -1,1 +1,2 @@
-server: bundle exec passenger start --p80
+web: bundle exec passenger start
+worker: bundle exec sidekiq
