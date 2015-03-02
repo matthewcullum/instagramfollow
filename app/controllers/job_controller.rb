@@ -1,7 +1,8 @@
 class JobController < ApplicationController
-  @current_user = @client.user
-  @user_id = params[:id]
 
+  def init
+    @user_id = params[:id]
+  end
   def index
 
   end
@@ -15,10 +16,6 @@ class JobController < ApplicationController
   end
 
   def unfollow
-
-  end
-
-  def cancel_job
     follow = Follow.where({current_user_id: @current_user.id, chosen_user_id: @user_id})
   end
 end

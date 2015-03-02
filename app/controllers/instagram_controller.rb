@@ -27,6 +27,6 @@ class InstagramController < ApplicationController
   end
 
   def limits
-    render text: '<pre>'+@client.user_followed_by(4).to_s+'</pre>'.html_safe
+    render text: '<pre>'+@client.utils_raw_response.headers[:x_ratelimit_remaining]+'</pre>'.html_safe
   end
 end

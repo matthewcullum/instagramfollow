@@ -10,6 +10,7 @@ class ApplicationController < ActionController::Base
 
       #TODO: refactor arguments for statement below in variables
       @client = Instagram.client client_id: ENV['INSTAGRAM_API_KEY'], client_secret: ENV['INSTAGRAM_SECRET_KEY'], client_ips: '127.0.0.1', access_token: current_user.oauth_token
+      @current_user = @client.user
     end
   end
 end
