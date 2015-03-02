@@ -1,1 +1,1 @@
-server: bundle exec passenger start
+server: bundle exec passenger start --p80
