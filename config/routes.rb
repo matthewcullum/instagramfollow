@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   get 's', to: 'instagram#search', as: 'search'
   get 'viewprofile/:id', to: 'instagram#view_profile', as: 'view_profile'
   post '/jobs/follow', to: 'job#follow', as: 'new_follow_job'
+  post '/jobs/unfollow', to: 'job#unfollow', as: 'new_unfollow_job'
 
 
   if Rails.env.development?
