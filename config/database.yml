@@ -16,7 +16,6 @@
 #
 default: &default
   adapter: postgresql
-  encoding: SQL_ASCII
   # For details on connection pooling, see rails configuration guide
   # http://guides.rubyonrails.org/configuring.html#database-pooling
   pool: 25
@@ -80,5 +79,6 @@ test:
 #
 production:
   <<: *default
-  database_url: <%= ENV['DATABASE_URL'] %>
+  #database_url: <%= ENV['DATABASE_URL'] %>
+  database: 'autofollow_production'
   #password: <%= ENV['INSTAGRAMFOLLOW_DATABASE_PASSWORD'] %>
