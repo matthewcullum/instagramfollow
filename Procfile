@@ -1,2 +1,2 @@
-web: bundle exec passenger start -p5000
+web: bundle exec passenger start --p 5000
 worker: bundle exec sidekiq
