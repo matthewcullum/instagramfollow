@@ -79,6 +79,7 @@ test:
 #
 production:
   <<: *default
+  encoding: SQL_ASCII
   #database_url: <%= ENV['DATABASE_URL'] %>
   database: 'autofollow_production'
   #password: <%= ENV['INSTAGRAMFOLLOW_DATABASE_PASSWORD'] %>
