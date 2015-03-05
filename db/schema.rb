@@ -21,10 +21,12 @@ ActiveRecord::Schema.define(version: 20150302053758) do
     t.string   "current_user_id"
     t.integer  "total_followers"
     t.integer  "follow_count",    default: 0
-    t.integer  "unfollow_count"
+    t.integer  "unfollow_count",  default: 0
     t.string   "status"
-    t.datetime "created_at",                  null: false
-    t.datetime "updated_at",                  null: false
+    t.integer  "follow_ids",      default: [],                 array: true
+    t.boolean  "cancelled",       default: false
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
   end
 
   create_table "users", force: :cascade do |t|

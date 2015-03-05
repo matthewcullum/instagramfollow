@@ -1,13 +1,25 @@
-.container
-  -if @queue.count > 0
-    -@queue.each do |job|
-      -@job = job
-      -@profile = @client.user(job.chosen_user_id)
-      = render 'dashboard/queue_item'
-  -else
-    .jumbotron
-      %h3.text-center
-        The job queue is currently empty
-        %br/
-        Please use the search bar above to get started
-
+.container-fluid
+  .col-md-5.well
+    %h1.text-muted Finished
+    %hr
+    -if @done.count > 0
+      -@done.each do |job|
+        -@job = job
+        -@profile = @client.user(job.chosen_user_id)
+        = render 'dashboard/queue_item'
+    -else
+      .well
+        %h3.text-left.text-info
+          No job history yet
+  .col-md-6.col-md-offset-1.well
+    %h1.text-muted Active
+    %hr
+    -if @queue.count > 0
+      -@queue.each do |job|
+        -@job = job
+        -@profile = @client.user(job.chosen_user_id)
+        = render 'dashboard/queue_item'
+    -else
+      .well
+        %h3.text-left.text-info
+          The job queue is currently empty

@@ -1,11 +1,11 @@
-.col-md-10.col-md-offset-1.panel.panel-primary
-  .col-md-9
+.col-md-12.panel.panel-primary
+  .col-md-8
     %h1
       =@profile.username
       %br
       %small= "#{@followed_by_count} followers"
     %h3= @profile.bio
-  .col-md-3
+  .col-md-4
     =image_tag @profile.profile_picture, class: 'thumbnail'
   .col-md-12
     %table.table.table-bordered
@@ -26,6 +26,12 @@
           Current status
         %td= @job.status
   %p
-    =form_tag new_follow_job_path do |f|
-      =hidden_field_tag 'id', @profile.id
-      =submit_tag 'Cancel', class: 'btn btn-danger form-control'
+    -if @job.status.eql? 'following'
+      =form_tag new_unfollow_job_path do |f|
+        =hidden_field_tag 'id', @profile.id
+        =submit_tag 'Cancel', class: 'btn btn-danger form-control'
+
+    -elsif @job.status.eql? 'waiting'
+      =form_tag new_unfollow_job_path do |f|
+        =hidden_field_tag 'id', @profile.id
+        =submit_tag 'Start unfollowing', class: 'btn btn-success form-control'

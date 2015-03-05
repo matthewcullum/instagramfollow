@@ -18,6 +18,15 @@ class JobController < ApplicationController
   end
 
   def unfollow
-    follow = Follow.where({current_user_id: @current_user.id, chosen_user_id: @user_id})
+    follow = Follow.where({current_user_id: @current_user.id, chosen_user_id: @user_id}).first
+    if follow.status == 'following'
+      follow.cancelled = true
+      follow.save
+      UnfollowJob.perform_async follow.id, @access_token
+    else
+      follow.status == 'waiting'
+      UnfollowJob.perform_async follow.id, @access_token
+    end
+    redirect_to '/'
   end
 end

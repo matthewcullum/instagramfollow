@@ -13,7 +13,6 @@ Rails.application.routes.draw do
   post '/jobs/follow', to: 'job#follow', as: 'new_follow_job'
   post '/jobs/unfollow', to: 'job#unfollow', as: 'new_unfollow_job'
 
-
   if Rails.env.development?
     require 'sidekiq/web'
     mount Sidekiq::Web => '/sidekiq'

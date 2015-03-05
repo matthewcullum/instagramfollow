@@ -18,21 +18,37 @@ class FollowJob
 
     @next_cursor = options[:cursor] || 0
 
+    followed_all_followers = false
     loop do
       @followed_by = @client.user_followed_by @chosen_user[:id], next_cursor: @next_cursor
 
       @followed_by.each do |follower|
+        follow.reload
+        break if follow.cancelled.eql? true
+        if follow.follow_ids.include? follower.id
+          followed_all_followers = true
+          break
+        end
+
         unless %w(follows requested).include? @client.user_relationship(follower.id).outgoing_status
           Rails.logger.info follower
           # @client.follow_user follower.id
           follow.follow_count += 1
+          follow.follow_ids.push follower.id
           follow.save
           sleep(1)
         end
       end
       @next_cursor = @followed_by.pagination.next_cursor
 
-      break unless @next_cursor
+
+      if !@next_cursor or followed_all_followers
+        follow.status = 'waiting'
+        follow.save
+        break
+      end
+      break if follow.cancelled.eql? true
+
     end
   end
 end
