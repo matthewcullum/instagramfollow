@@ -16,11 +16,13 @@ class UnfollowJob
     @next_cursor = options[:cursor] || 0
 
     loop do
+
       unfollow_id = follow.follow_ids.pop
       if unfollow_id.nil?
-        follow.status = "done"
+        follow.status = 'done'
         follow.save
         break
+
       else
         @client.unfollow_user unfollow_id
         follow.follow_count -= 1

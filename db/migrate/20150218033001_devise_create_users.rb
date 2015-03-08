@@ -24,6 +24,7 @@ class DeviseCreateUsers < ActiveRecord::Migration
       t.string :uid
       t.string :oauth_token
       t.string :image
+      t.integer :total_follows
 
       ## Confirmable
       # t.string   :confirmation_token

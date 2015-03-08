@@ -19,6 +19,11 @@
 require 'devise'
 require 'factory_girl_rails'
 require 'support/controller_macros'
+require 'sidekiq/testing'
+
+Sidekiq::Testing.fake!
+Sidekiq::Testing.inline!
+
 
 RSpec.configure do |config|
   config.include Devise::TestHelpers, type: :controller
