@@ -6,7 +6,7 @@ class Users::OmniauthController < Devise::OmniauthCallbacksController
       @user.save
     end
     sign_in @user
-    redirect_to '/'
+    redirect_to :back
   end
 
   def failure

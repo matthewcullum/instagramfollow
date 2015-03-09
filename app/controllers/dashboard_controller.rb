@@ -2,8 +2,8 @@ class DashboardController < ApplicationController
   layout 'dashboard'
 
   def index
-    @queue = Follow.where({status: %w(following unfollowing waiting)}).all
-    @done = Follow.where({status: 'done'}).all
+    @queue = Follow.where({finished: false}).all
+    @done = Follow.where({finished: true}).all
 
     @queue_count = @queue.count
   end

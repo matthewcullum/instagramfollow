@@ -25,6 +25,7 @@ class DeviseCreateUsers < ActiveRecord::Migration
       t.string :oauth_token
       t.string :image
       t.integer :total_follows
+      t.integer :total_allowed_follows, default: 6000
 
       ## Confirmable
       # t.string   :confirmation_token

@@ -14,6 +14,10 @@ class User < ActiveRecord::Base
     end
   end
 
+  def self.find_by_uid(uid)
+    where({uid:uid}).first
+  end
+
   def password_required?
     false
   end

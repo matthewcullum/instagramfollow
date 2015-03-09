@@ -3,15 +3,17 @@ class CreateFollows < ActiveRecord::Migration
     create_table :follows do |t|
       t.string :chosen_user_id
       t.string :current_user_id
-      t.string :status
+      t.text :status
+      t.string :jid
 
       t.integer :total_followers
       t.integer :follow_count, default: 0
       t.integer :unfollow_count, default: 0
       t.integer :follow_ids, array: true, default: []
-      t.integer :next_cursor, default: 0
+      t.integer :next_cursor, default: 0, limit: 8
 
-      t.boolean :finished
+      t.boolean :finished, default: false
+      t.boolean :following_done, default: false
       t.boolean :cancelled, default: false
 
       t.timestamps null: false

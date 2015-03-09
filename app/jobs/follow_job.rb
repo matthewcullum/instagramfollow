@@ -1,106 +1,157 @@
 class FollowJob
   include Sidekiq::Worker
-  sidekiq_options queue: :default, retry: false
+  sidekiq_options queue: :default, retry: true
 
-  def perform(chosen_user_id, current_user_id, access_token, *args)
+  def perform(follow_id, *args)
+
     options = args.extract_options!
 
-    client = Instagram.client client_id: ENV['INSTAGRAM_API_KEY'], client_secret: ENV['INSTAGRAM_SECRET_KEY'], client_ips: '127.0.0.1', access_token: access_token
+    @follow = Follow.find follow_id
+    @current_user_local = User.find_by_uid @follow.current_user_id
 
-    current_user = User.find(current_user_id)
-    @chosen_user = client.user(chosen_user_id)
+    @access_token = @current_user_local.oauth_token
+    @client = Instagram.client client_id: ENV['INSTAGRAM_API_KEY'], client_secret: ENV['INSTAGRAM_SECRET_KEY'], client_ips: '127.0.0.1', access_token: @access_token
 
-    follow = Follow.where(chosen_user_id: chosen_user_id, current_user_id: current_user_id).first_or_create
-    follow.status = 'following'
-    follow.total_followers = chosen_user[:counts][:followed_by]
-    follow.save
+    @current_user = @client.user @follow.current_user_id
 
-    @total_allowed_follows = 6000
+    @chosen_user = @client.user(@follow.chosen_user_id)
 
-    @next_cursor = follow.next_cursor || 0
+    @total_allowed_follows = @current_user_local.total_allowed_follows
+
+    @next_cursor = @follow.next_cursor
+
     @current_follow_set = nil
 
-    @completed = false
-
-
     def update_follow
-      follow.reload
+      @follow.save
+      @follow.reload
     end
 
     def save_follow
-      follow.save
+      @follow.save
     end
 
     def update_user
-      user.reload
+      @current_user.reload
     end
 
     def cancelled?
-      follow.reload
-      follow.cancelled
+      @follow.reload
+      @follow.cancelled
     end
 
-    def should_stop?
-      # return cancelled? or
-    end
-
-    def followed_everyone?(current_follower_id)
+    def followed_everyone?
       update_follow
-      follow.follow_ids.include? current_follower_id
+      follow_count = @follow.follow_count
+      total_followers = @follow.total_followers
+
+      follow_count >= total_followers
+    end
+
+    def already_followed?(follower_id)
+      update_follow
+      follow_ids = @follow.follow_ids
+      follow_ids.include? follower_id
     end
 
     def user_exceeded_follow_limit?
       update_user
-
+      user_total_follows = @current_user[:counts][:follows]
+      user_total_follows >= @total_allowed_follows
     end
 
     def next_follow_set
-      follow_set = client.user_followed_by @chosen_user[:id], next_cursor: @next_cursor
+      @current_cursor = @next_cursor
+
+      follow_set = @client.user_followed_by @chosen_user[:id], next_cursor: @next_cursor
       @next_cursor = follow_set.pagination.next_cursor
-      follow.next_cursor = @next_cursor
-      follow.save
+      @follow.next_cursor = @next_cursor
+      @follow.save
       follow_set
     end
 
     def queue_unfollow_job
-      UnfollowJob.perform_async chosen_user_id, access_token
+      UnfollowJob.perform_async @follow.id, @access_token
     end
 
-    def follow_next_follower_set
-      next_follow_set.each do |follower|
+    def log(message)
+      stars = "*****************************"
+      puts "#{stars} #{message} #{stars}"
+    end
 
-        # if the array of ids we've already followed include the current, we need to break. we've looped around
+    keep_going = true
+
+    @follow.status = 'following'
+    @follow.jid = jid
+    @follow.total_followers = @chosen_user[:counts][:followed_by]
+    save_follow
+
+    redundant_follow_count = 0
+    max_follow_retries = 20
+
+    loop do
+      follow_set = next_follow_set
+
+      follow_set.each do |follower|
+
         if followed_everyone?
-          follow.status = 'queued for unfollow'
-          @completed = true
-          follow.finished = true
+          log "Followed everyone"
+          @follow.status = 'Queueing for unfollow'
+          @follow.following_done = true
           save_follow
+          queue_unfollow_job
+          keep_going = false
           break
-
         elsif cancelled?
-          queue_unfollow_job
-          break
-
-        elsif user_exceeded_follow_limit?
-          follow.next_cursor = next_cursor
+          @follow.cancelled = true
           save_follow
           queue_unfollow_job
+          keep_going = false
+          break
+        elsif user_exceeded_follow_limit?
+          keep_going = false
+          queue_unfollow_job
+        elsif already_followed? follower.id
+          redundant_follow_count +=1
+          if redundant_follow_count > max_follow_retries
+            @follow.following_done = true
+            save_follow
+            keep_going = false
+          end
+          break
         end
 
         # unless a follow request has already been sent, follow the follower
-        unless %w(follows requested).include? client.user_relationship(follower.id).outgoing_status
-          follow_request = follow.follow_ids.push follower.id
-          follow.follow_count += 1 if follow_request
+        begin
+          relationship = @client.user_relationship(follower.id).outgoing_status
+
+          if %w(follows requested).exclude? relationship
+            begin
+              follow_request = @client.follow_user follower.id
+              log follow_request
+              if follow_request
+                @follow.follow_ids.push follower.id.to_i
+                @follow.follow_count += 1
+                save_follow
+              end
+            rescue
+              @follow.status = "Hourly limit exceeded. Will resume at #{1.hours.from_now.to_formatted_s(:time)}"
+              save_follow
+              keep_going = false
+              FollowJob.perform_in 61.minutes, @follow.id
+            end
+          else
+            @follow.follow_count += 1
+            save_follow
+          end
+        rescue
+          @follow.follow_count += 1
           save_follow
         end
-
-        follow_next_follower_set
+        break unless keep_going # follow each loop
       end
+      break unless keep_going # container loop
     end
-
-
-
   end
-  # loop through followers, following one at a time
-
 end
+
