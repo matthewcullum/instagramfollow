@@ -19,7 +19,7 @@ ActiveRecord::Schema.define(version: 20150302053758) do
   create_table "follows", force: :cascade do |t|
     t.string   "chosen_user_id"
     t.string   "current_user_id"
-    t.string   "status"
+    t.text     "status"
     t.string   "jid"
     t.integer  "total_followers"
     t.integer  "follow_count",              default: 0

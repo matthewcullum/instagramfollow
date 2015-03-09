@@ -103,22 +103,25 @@ class FollowJob
           keep_going = false
           break
         elsif cancelled?
+          log "cancelled"
           @follow.cancelled = true
           save_follow
           queue_unfollow_job
           keep_going = false
           break
         elsif user_exceeded_follow_limit?
+          log "user exceeded follow limit"
           keep_going = false
           queue_unfollow_job
         elsif already_followed? follower.id
+          log "already followed"
           redundant_follow_count +=1
           if redundant_follow_count > max_follow_retries
             @follow.following_done = true
             save_follow
             keep_going = false
+            break
           end
-          break
         end
 
         # unless a follow request has already been sent, follow the follower
@@ -137,17 +140,20 @@ class FollowJob
             rescue
               @follow.status = "Hourly limit exceeded. Will resume at #{1.hours.from_now.to_formatted_s(:time)}"
               save_follow
-              keep_going = false
               FollowJob.perform_in 61.minutes, @follow.id
+              keep_going = false
             end
           else
             @follow.follow_count += 1
             save_follow
           end
+
         rescue
           @follow.follow_count += 1
           save_follow
         end
+
+        sleep 1
         break unless keep_going # follow each loop
       end
       break unless keep_going # container loop
