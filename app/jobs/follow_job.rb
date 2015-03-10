@@ -13,26 +13,18 @@ class FollowJob
     @client = Instagram.client client_id: ENV['INSTAGRAM_API_KEY'], client_secret: ENV['INSTAGRAM_SECRET_KEY'], client_ips: '127.0.0.1', access_token: @access_token
 
     @current_user = @client.user @follow.current_user_id
-
     @chosen_user = @client.user(@follow.chosen_user_id)
-
     @total_allowed_follows = @current_user_local.total_allowed_follows
-
     @next_cursor = @follow.next_cursor
-
     @current_follow_set = nil
+    @debug_mode = true
 
-    def update_follow
-      @follow.save
-      @follow.reload
+    if @debug_mode
+      @temp_limit = @current_user[:counts][:follows] += 10
     end
 
     def save_follow
       @follow.save
-    end
-
-    def update_user
-      @current_user.reload
     end
 
     def cancelled?
@@ -41,7 +33,6 @@ class FollowJob
     end
 
     def followed_everyone?
-      update_follow
       follow_count = @follow.follow_count
       total_followers = @follow.total_followers
 
@@ -49,14 +40,15 @@ class FollowJob
     end
 
     def already_followed?(follower_id)
-      update_follow
       follow_ids = @follow.follow_ids
-      follow_ids.include? follower_id
+      skipped_ids = @follow.skipped_ids
+
+      follow_ids.include? follower_id or skipped_ids.include? follower_id
     end
 
+
     def user_exceeded_follow_limit?
-      update_user
-      user_total_follows = @current_user[:counts][:follows]
+      user_total_follows = @client.user(@follow.current_user_id)[:counts][:follows]
       user_total_follows >= @total_allowed_follows
     end
 
@@ -71,7 +63,7 @@ class FollowJob
     end
 
     def queue_unfollow_job
-      UnfollowJob.perform_async @follow.id, @access_token
+      UnfollowJob.perform_async @current_user.id, follow_id: @follow.id
     end
 
     def log(message)
@@ -87,7 +79,7 @@ class FollowJob
     save_follow
 
     redundant_follow_count = 0
-    max_follow_retries = 20
+    max_follow_retries = 11
 
     loop do
       follow_set = next_follow_set
@@ -95,7 +87,7 @@ class FollowJob
       follow_set.each do |follower|
 
         if followed_everyone?
-          log "Followed everyone"
+          log 'Followed everyone'
           @follow.status = 'Queueing for unfollow'
           @follow.following_done = true
           save_follow
@@ -103,18 +95,18 @@ class FollowJob
           keep_going = false
           break
         elsif cancelled?
-          log "cancelled"
+          log 'cancelled'
           @follow.cancelled = true
           save_follow
           queue_unfollow_job
           keep_going = false
           break
         elsif user_exceeded_follow_limit?
-          log "user exceeded follow limit"
-          keep_going = false
+          log 'user exceeded follow limit'
           queue_unfollow_job
-        elsif already_followed? follower.id
-          log "already followed"
+          keep_going = false
+        elsif already_followed? follower.id.to_i
+          log 'already followed'
           redundant_follow_count +=1
           if redundant_follow_count > max_follow_retries
             @follow.following_done = true
@@ -127,33 +119,48 @@ class FollowJob
         # unless a follow request has already been sent, follow the follower
         begin
           relationship = @client.user_relationship(follower.id).outgoing_status
+          log relationship
 
           if %w(follows requested).exclude? relationship
             begin
-              follow_request = @client.follow_user follower.id
-              log follow_request
-              if follow_request
-                @follow.follow_ids.push follower.id.to_i
-                @follow.follow_count += 1
-                save_follow
+
+              if @debug_mode and (@temp_limit >= @total_allowed_follows)
+                raise Instagram::RateLimitExceeded.new
               end
-            rescue
-              @follow.status = "Hourly limit exceeded. Will resume at #{1.hours.from_now.to_formatted_s(:time)}"
+
+              follow_request = @debug_mode ? true : @client.follow_user(follower.id)
+
+              log follow_request
+
+              if follow_request and @follow.follow_ids.exclude?(follower.id.to_i)
+                @follow.follow_ids << follower.id.to_i
+              else
+                redundant_follow_count += 1
+              end
+            rescue Instagram::RateLimitExceeded
+              delay = @debug_mode ? 5.seconds : 61.minutes
+              @follow.status = "Hourly limit exceeded. Will resume at #{delay.from_now.to_formatted_s(:time)}"
               save_follow
-              FollowJob.perform_in 61.minutes, @follow.id
+              FollowJob.perform_in delay, @follow.id
               keep_going = false
             end
           else
-            @follow.follow_count += 1
+            if @follow.skipped_ids.exclude? follower.id.to_i
+              @follow.skipped_ids << follower.id.to_i
+            else
+              redundant_follow_count += 1
+            end
             save_follow
           end
 
         rescue
-          @follow.follow_count += 1
           save_follow
         end
 
-        sleep 1
+        unless @debug_mode
+          sleep 1
+        end
+        save_follow
         break unless keep_going # follow each loop
       end
       break unless keep_going # container loop

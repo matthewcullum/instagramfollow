@@ -7,9 +7,10 @@ class CreateFollows < ActiveRecord::Migration
       t.string :jid
 
       t.integer :total_followers
-      t.integer :follow_count, default: 0
       t.integer :unfollow_count, default: 0
+      t.integer :skipped_count, default: 0
       t.integer :follow_ids, array: true, default: []
+      t.integer :skipped_ids, array: true, default: []
       t.integer :next_cursor, default: 0, limit: 8
 
       t.boolean :finished, default: false

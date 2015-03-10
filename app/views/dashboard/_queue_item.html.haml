@@ -19,6 +19,10 @@
         %td= @job.unfollow_count
       %tr
         %td
+          Skipped count
+        %td= @job.skipped_count
+      %tr
+        %td
           Total followers
         %td= @job.total_followers
       %tr
@@ -26,12 +30,15 @@
           Current status
         %td= @job.status
   %p
-    -if @job.status.eql? 'following'
-      =form_tag new_unfollow_job_path do |f|
-        =hidden_field_tag 'id', @profile.id
+    -if @job.status == "Finished"
+      =form_tag remove_job_path do |f|
+        =hidden_field_tag 'job_id', @job.id
+        =submit_tag 'Remove from history', class: 'btn btn-success form-control'
+    -elsif @job.status == 'Cancelled' and @job.follow_ids.count > 0
+      = 'Pending unfollow...'
+    -elsif @job.status == 'Cancelled'
+      -nil
+    -else
+      =form_tag cancel_job_path do |f|
+        =hidden_field_tag 'job_id', @job.id
         =submit_tag 'Cancel', class: 'btn btn-danger form-control'
-
-    -elsif @job.status.eql? 'waiting'
-      =form_tag new_unfollow_job_path do |f|
-        =hidden_field_tag 'id', @profile.id
-        =submit_tag 'Start unfollowing', class: 'btn btn-success form-control'

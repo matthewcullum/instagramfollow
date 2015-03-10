@@ -1,21 +1,17 @@
 class JobController < ApplicationController
 
-  def init
-    super
-    @user_id = params[:id]
-
-  end
-
   def index
 
   end
 
   def follow
+    user_id = params[:id]
+
     @profile = @client.user @user_id
 
     @queue = Follow.where_unfinished
 
-    follow = Follow.create chosen_user_id: @user_id, current_user_id: current_user.id, total_followers: @profile[:counts][:followed_by]
+    follow = Follow.create chosen_user_id: user_id, current_user_id: current_user.id, total_followers: @profile[:counts][:followed_by]
 
     if @queue.count == 1
       FollowJob.perform_async follow.id
@@ -24,16 +20,18 @@ class JobController < ApplicationController
     redirect_to '/'
   end
 
-  def unfollow
-    follow = Follow.where({current_user_id: current_user.id, chosen_user_id: @user_id}).first
-    if follow.status == 'following'
-      follow.cancelled = true
-      follow.save
-      UnfollowJob.perform_async follow.id, @access_token
-    else
-      follow.status == 'waiting'
-      UnfollowJob.perform_async follow.id, @access_token
-    end
-    redirect_to '/'
+  def cancel
+    follow_id = params[:job_id]
+    follow = Follow.find follow_id
+    follow.cancelled = true
+    follow.save
+    redirect_to :back
+  end
+
+  def remove
+    job_id = params[:job_id]
+    Follow.find(job_id).destroy
+    redirect_to :back
   end
 end
+

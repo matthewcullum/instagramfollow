@@ -22,9 +22,10 @@ ActiveRecord::Schema.define(version: 20150302053758) do
     t.text     "status"
     t.string   "jid"
     t.integer  "total_followers"
-    t.integer  "follow_count",              default: 0
     t.integer  "unfollow_count",            default: 0
+    t.integer  "skipped_count",             default: 0
     t.integer  "follow_ids",                default: [],                 array: true
+    t.integer  "skipped_ids",               default: [],                 array: true
     t.integer  "next_cursor",     limit: 8, default: 0
     t.boolean  "finished",                  default: false
     t.boolean  "following_done",            default: false
