@@ -7,7 +7,7 @@ class JobController < ApplicationController
   def follow
     user_id = params[:id]
 
-    @profile = @client.user @user_id
+    @profile = @client.user user_id
 
     @queue = Follow.where_unfinished
 

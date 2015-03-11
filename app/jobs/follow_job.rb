@@ -7,6 +7,7 @@ class FollowJob
     options = args.extract_options!
 
     @follow = Follow.find follow_id
+    puts "Follow: #{@follow.inspect}"
     @current_user_local = User.find_by_uid @follow.current_user_id
 
     @access_token = @current_user_local.oauth_token
@@ -53,9 +54,10 @@ class FollowJob
     end
 
     def next_follow_set
-      @current_cursor = @next_cursor
 
-      follow_set = @client.user_followed_by @chosen_user[:id], next_cursor: @next_cursor
+      @current_cursor = @follow.next_cursor
+
+      follow_set = @client.user_followed_by @chosen_user.id, cursor: @next_cursor
       @next_cursor = follow_set.pagination.next_cursor
       @follow.next_cursor = @next_cursor
       @follow.save
@@ -66,19 +68,23 @@ class FollowJob
       UnfollowJob.perform_async @current_user.id, follow_id: @follow.id
     end
 
-    def log(message)
-      stars = "*****************************"
-      puts "#{stars} #{message} #{stars}"
+    def debug(message)
+      if @debug_mode
+        if message
+          stars = "*****************************"
+          puts "#{stars} #{message} #{stars}"
+        end
+      end
     end
 
-    keep_going = true
+    @keep_going = true
 
     @follow.status = 'following'
     @follow.jid = jid
     @follow.total_followers = @chosen_user[:counts][:followed_by]
     save_follow
 
-    redundant_follow_count = 0
+    @redundant_follow_count = 0
     max_follow_retries = 11
 
     loop do
@@ -87,84 +93,91 @@ class FollowJob
       follow_set.each do |follower|
 
         if followed_everyone?
-          log 'Followed everyone'
+          debug 'Followed everyone'
           @follow.status = 'Queueing for unfollow'
           @follow.following_done = true
           save_follow
-          queue_unfollow_job
-          keep_going = false
+          @keep_going = false
           break
         elsif cancelled?
-          log 'cancelled'
+          debug 'cancelled'
           @follow.cancelled = true
           save_follow
-          queue_unfollow_job
-          keep_going = false
+          @keep_going = false
           break
         elsif user_exceeded_follow_limit?
-          log 'user exceeded follow limit'
-          queue_unfollow_job
-          keep_going = false
-        elsif already_followed? follower.id.to_i
-          log 'already followed'
-          redundant_follow_count +=1
-          if redundant_follow_count > max_follow_retries
-            @follow.following_done = true
+          debug 'user exceeded follow limit'
+          @keep_going = false
+        elsif @redundant_follow_count > max_follow_retries
+          debug 'max follow retries reached'
+          @follow.following_done = true
+          save_follow
+          @keep_going = false
+          break
+        end
+
+        def follow(follower)
+          debug 'follow'
+          begin
+            if @debug_mode and (@temp_limit >= @total_allowed_follows)
+              raise Instagram::RateLimitExceeded.new
+            end
+
+            follow_request = @debug_mode ? true : @client.follow_user(follower.id)
+
+            debug follow_request
+
+            if follow_request and @follow.follow_ids.exclude?(follower.id.to_i)
+              debug "adding follower to skipped ids. count is #{@follow.follow_count}"
+              @follow.follow_ids << follower.id.to_i
+            else
+              debug 'already followed'
+              @redundant_follow_count += 1
+            end
+          rescue Instagram::RateLimitExceeded
+            delay = @debug_mode ? 5.seconds : 61.minutes
+            @follow.status = "Hourly limit exceeded. Will resume at #{delay.from_now.to_formatted_s(:time)}"
             save_follow
-            keep_going = false
-            break
+            FollowJob.perform_in delay, @follow.id
+            @keep_going = false
           end
+        end
+
+        def skip(follower)
+          debug 'skip'
+          if @follow.skipped_ids.exclude? follower.id.to_i
+            debug "adding follower to skipped ids. count is #{@follow.skipped_count}"
+            @follow.skipped_ids << follower.id.to_i
+          else
+            debug 'already skipped'
+          end
+          save_follow
         end
 
         # unless a follow request has already been sent, follow the follower
         begin
           relationship = @client.user_relationship(follower.id).outgoing_status
-          log relationship
-
+          debug relationship
           if %w(follows requested).exclude? relationship
-            begin
-
-              if @debug_mode and (@temp_limit >= @total_allowed_follows)
-                raise Instagram::RateLimitExceeded.new
-              end
-
-              follow_request = @debug_mode ? true : @client.follow_user(follower.id)
-
-              log follow_request
-
-              if follow_request and @follow.follow_ids.exclude?(follower.id.to_i)
-                @follow.follow_ids << follower.id.to_i
-              else
-                redundant_follow_count += 1
-              end
-            rescue Instagram::RateLimitExceeded
-              delay = @debug_mode ? 5.seconds : 61.minutes
-              @follow.status = "Hourly limit exceeded. Will resume at #{delay.from_now.to_formatted_s(:time)}"
-              save_follow
-              FollowJob.perform_in delay, @follow.id
-              keep_going = false
-            end
+            follow follower
           else
-            if @follow.skipped_ids.exclude? follower.id.to_i
-              @follow.skipped_ids << follower.id.to_i
-            else
-              redundant_follow_count += 1
-            end
-            save_follow
+            skip follower
           end
-
-        rescue
+        rescue Instagram::Error
+          debug 'phew, barely saved the relationship'
           save_follow
         end
 
-        unless @debug_mode
-          sleep 1
-        end
+        sleep 1 unless @debug_mode
+
         save_follow
-        break unless keep_going # follow each loop
+        break unless @keep_going # follow each loop
       end
-      break unless keep_going # container loop
+      debug "leaving followset loop, keep going is #{@keep_going}"
+      break unless @keep_going # container loop
     end
+    debug "leaving container loop, keep going is #{@keep_going}"
   end
 end
+
 

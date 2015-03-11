@@ -18,4 +18,8 @@ class Follow < ActiveRecord::Base
   def skipped_count
     self.skipped_ids.count
   end
+
+  def pending_unfollow
+
+  end
 end
