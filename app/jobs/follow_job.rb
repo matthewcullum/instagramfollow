@@ -64,8 +64,19 @@ class FollowJob
       follow_set
     end
 
-    def queue_unfollow_job
-      UnfollowJob.perform_async @current_user.id, follow_id: @follow.id
+    def after_done
+      @current_user_local.total_follows = @client.user @follow.current_user_id
+      @current_user_local.save
+
+      total_follows = @current_user_local.total_follows
+      total_allowed_follows = @current_user_local.total_allowed_follows
+      unfinished = Follow.where_unfinished
+
+      if total_follows >= total_allowed_follows
+        UnfollowJob.perform_async
+      elsif Follow.where_unfinished.count >= 1
+        FollowJob.perform_async Follow.where_unfinished.first
+      end
     end
 
     def debug(message)
@@ -87,6 +98,7 @@ class FollowJob
     @redundant_follow_count = 0
     max_follow_retries = 11
 
+
     loop do
       follow_set = next_follow_set
 
@@ -94,21 +106,25 @@ class FollowJob
 
         if followed_everyone?
           debug 'Followed everyone'
-          @follow.status = 'Queueing for unfollow'
+          @follow.status = 'Will start unfollowing when account reaches follow limit'
           @follow.following_done = true
           save_follow
           @keep_going = false
           break
         elsif cancelled?
           debug 'cancelled'
+          @follow.status = 'Will start unfollowing when account reaches follow limit'
           @follow.cancelled = true
           save_follow
           @keep_going = false
           break
         elsif user_exceeded_follow_limit?
           debug 'user exceeded follow limit'
+          @follow.status = 'Follow limit reached. Queue to start unfollowing'
+          save_follow
           @keep_going = false
-        elsif @redundant_follow_count > max_follow_retries
+        elsif @redundant_follow_count >= max_follow_retries
+          @follow.status = 'Following done. Queued to start unfollowing when account reaches follow limit'
           debug 'max follow retries reached'
           @follow.following_done = true
           save_follow
@@ -174,7 +190,10 @@ class FollowJob
         break unless @keep_going # follow each loop
       end
       debug "leaving followset loop, keep going is #{@keep_going}"
-      break unless @keep_going # container loop
+      unless @keep_going # container loop
+        after_done
+        break
+      end
     end
     debug "leaving container loop, keep going is #{@keep_going}"
   end

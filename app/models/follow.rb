@@ -20,6 +20,6 @@ class Follow < ActiveRecord::Base
   end
 
   def pending_unfollow
-
+    where("following_done = true or cancelled = true")
   end
 end
