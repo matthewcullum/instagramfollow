@@ -13,11 +13,11 @@ Rails.application.routes.draw do
   post '/jobs/follow', to: 'job#follow', as: 'new_follow_job'
   post '/jobs/cancel', to: 'job#cancel', as: 'cancel_job'
   post '/jobs/remove', to: 'job#remove', as: 'remove_job'
+  get '/limits', to: 'queue#limits', as: 'limits'
 
   if Rails.env.development?
     require 'sidekiq/web'
     mount Sidekiq::Web => '/sidekiq'
-    get '/limits', to: 'queue#limits', as: 'limits'
 
     #   get '/limits', to: 'sessions#view_instagram_api_limits'
     #   get '/playground', to: 'queue#playground'

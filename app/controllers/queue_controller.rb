@@ -10,6 +10,6 @@ class QueueController < ApplicationController
   end
 
   def limits
-    render text: @client.utils_raw_response.headers[:x_ratelimit_limit]
+    render text: @client.utils_raw_response.headers[:x_ratelimit_remaining]
   end
 end
