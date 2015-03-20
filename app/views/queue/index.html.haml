@@ -5,8 +5,8 @@
     -if @done.count > 0
       -@done.each do |job|
         -@job = job
-        -@profile = @client.user(job.chosen_user_id)
-        = render 'dashboard/queue_item'
+        -@profile = @client.user(job.instagram_id)
+        = render 'queue/queue_item'
     -else
       .well
         %h3.text-left.text-info
@@ -17,8 +17,8 @@
     -if @queue.count > 0
       -@queue.each do |job|
         -@job = job
-        -@profile = @client.user(job.chosen_user_id)
-        = render 'dashboard/queue_item'
+        -@profile = @client.user(job.instagram_id)
+        = render 'queue/queue_item'
     -else
       .well
         %h3.text-left.text-info

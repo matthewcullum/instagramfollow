@@ -7,9 +7,9 @@ Rails.application.routes.draw do
 
   devise_for :users, controllers: {omniauth_callbacks: 'users/omniauth'}
 
-  root to: 'dashboard#index'
-  get 's', to: 'instagram#search', as: 'search'
-  get 'viewprofile/:id', to: 'instagram#view_profile', as: 'view_profile'
+  root to: 'queue#index'
+  get 's', to: 'instagram_user#search', as: 'search'
+  get 'u/:id', to: 'instagram_user#profile', as: 'view_profile'
   post '/jobs/follow', to: 'job#follow', as: 'new_follow_job'
   post '/jobs/cancel', to: 'job#cancel', as: 'cancel_job'
   post '/jobs/remove', to: 'job#remove', as: 'remove_job'
@@ -17,10 +17,10 @@ Rails.application.routes.draw do
   if Rails.env.development?
     require 'sidekiq/web'
     mount Sidekiq::Web => '/sidekiq'
-    get '/limits', to: 'instagram#limits', as: 'limits'
+    get '/limits', to: 'queue#limits', as: 'limits'
 
     #   get '/limits', to: 'sessions#view_instagram_api_limits'
-    #   get '/playground', to: 'dashboard#playground'
+    #   get '/playground', to: 'queue#playground'
   end
 end
 

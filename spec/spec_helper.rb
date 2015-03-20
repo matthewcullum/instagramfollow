@@ -17,19 +17,18 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 require 'devise'
-require 'factory_girl_rails'
+require 'factory_girl'
 require 'support/controller_macros'
 require 'sidekiq/testing'
 
 Sidekiq::Testing.fake!
 Sidekiq::Testing.inline!
 
-
 RSpec.configure do |config|
   config.include Devise::TestHelpers, type: :controller
   config.include FactoryGirl::Syntax::Methods
 
-  config.extend ControllerMacros, :type => :controller
+  config.extend ControllerMacros, type: :controller
 
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest

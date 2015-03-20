@@ -1,0 +1,66 @@
+.col-md-12.panel.panel-primary
+  .col-md-8
+    %h1
+      =@profile.username
+      %br
+      %small= "#{@followed_by_count} followers"
+    %h3= @profile.bio
+  .col-md-4
+    =image_tag @profile.profile_picture, class: 'thumbnail'
+  .col-md-12
+    %table.table.table-striped
+      %tr
+        %td
+          Follow count
+        %td= @job.followed_count
+      %tr
+        %td
+          Unfollow count
+        %td= @job.unfollowed_count
+      %tr
+        %td
+          Follow queue
+        %td= @job.follow_queue.count
+      %tr
+        %td
+          Unfollow queue
+        %td= @job.unfollow_queue.count
+      %tr
+        %td
+          Already followed
+        %td= @job.skipped_count
+      %tr
+        %td
+          Total followers
+        %td= @job.total_followers
+      %tr
+        %td
+          Current status
+        %td
+          -if @job.waiting
+            -message = "Resuming in "
+            -#=@job.waiting
+            -#current_time = Time.now
+            =message + distance_of_time_in_words_to_now(@job.waiting)
+            -#="#{@job.waiting}"
+          -elsif @job.busy
+            -if @job.unfollow_queue.empty?
+              Following
+            -else
+              Unfollowing
+          -elsif @job.finished
+            Finished
+          -else
+            Pending
+
+  %p
+    -if @job.finished
+      =form_tag remove_job_path do |f|
+        =hidden_field_tag 'job_id', @job.id
+        =submit_tag 'Remove from history', class: 'btn btn-success form-control'
+    -elsif @job.cancelled and @job.followed_ids.count > 0
+      ='Pending unfollow...'
+    -elsif @job.busy and @job.follow_queue.count
+      =form_tag cancel_job_path do |f|
+        =hidden_field_tag 'job_id', @job.id
+        =submit_tag 'Cancel', class: 'btn btn-danger form-control'

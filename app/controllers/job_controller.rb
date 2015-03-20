@@ -9,20 +9,18 @@ class JobController < ApplicationController
 
     @profile = @client.user user_id
 
-    @queue = Follow.where_unfinished
+    @queue = User.find(@current_user.id).subjects.pending
+    subject = @current_user.subjects.where(instagram_id: user_id).first_or_create
 
-    follow = Follow.create chosen_user_id: user_id, current_user_id: current_user.id, total_followers: @profile[:counts][:followed_by]
-
-    if @queue.count == 1
-      FollowJob.perform_async follow.id
+    unless Rails.env.test?
+      FollowJob.perform_async @current_user.id
     end
 
     redirect_to '/'
   end
 
   def cancel
-    follow_id = params[:job_id]
-    follow = Follow.find follow_id
+    follow = @current_user.subjects.find params[:job_id]
     follow.cancelled = true
     follow.save
     redirect_to :back
@@ -30,7 +28,7 @@ class JobController < ApplicationController
 
   def remove
     job_id = params[:job_id]
-    Follow.find(job_id).destroy
+    Subject.find(job_id).destroy
     redirect_to :back
   end
 end

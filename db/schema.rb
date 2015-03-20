@@ -11,28 +11,30 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150302053758) do
+ActiveRecord::Schema.define(version: 20150218033001) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "follows", force: :cascade do |t|
-    t.string   "chosen_user_id"
-    t.string   "current_user_id"
-    t.text     "status"
-    t.string   "jid"
+  create_table "subjects", force: :cascade do |t|
+    t.integer  "user_id"
+    t.string   "instagram_id"
     t.integer  "total_followers"
-    t.integer  "unfollow_count",            default: 0
-    t.integer  "skipped_count",             default: 0
-    t.integer  "follow_ids",                default: [],                 array: true
+    t.integer  "follow_queue",              default: [],                 array: true
+    t.integer  "unfollow_queue",            default: [],                 array: true
+    t.integer  "followed_ids",              default: [],                 array: true
+    t.integer  "unfollowed_ids",            default: [],                 array: true
     t.integer  "skipped_ids",               default: [],                 array: true
     t.integer  "next_cursor",     limit: 8, default: 0
     t.boolean  "finished",                  default: false
-    t.boolean  "following_done",            default: false
+    t.boolean  "busy",                      default: false
+    t.datetime "waiting"
     t.boolean  "cancelled",                 default: false
     t.datetime "created_at",                                null: false
     t.datetime "updated_at",                                null: false
   end
+
+  add_index "subjects", ["user_id"], name: "index_subjects_on_user_id", using: :btree
 
   create_table "users", force: :cascade do |t|
     t.string   "email",                  default: ""
@@ -47,7 +49,7 @@ ActiveRecord::Schema.define(version: 20150302053758) do
     t.inet     "last_sign_in_ip"
     t.string   "provider"
     t.string   "uid"
-    t.string   "oauth_token"
+    t.string   "access_token"
     t.string   "image"
     t.integer  "total_follows"
     t.integer  "total_allowed_follows",  default: 6000

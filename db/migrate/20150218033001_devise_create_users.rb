@@ -22,7 +22,7 @@ class DeviseCreateUsers < ActiveRecord::Migration
       # Custom attributes
       t.string :provider
       t.string :uid
-      t.string :oauth_token
+      t.string :access_token
       t.string :image
       t.integer :total_follows
       t.integer :total_allowed_follows, default: 6000
@@ -41,6 +41,31 @@ class DeviseCreateUsers < ActiveRecord::Migration
 
       # Uncomment below if timestamps were not included in your original model.
       t.timestamps
+    end
+
+    create_table :subjects do |t|
+      t.belongs_to :user, index: true
+      t.string :instagram_id
+
+      t.integer :total_followers
+      t.integer :follow_queue, array: true, default: []
+      t.integer :unfollow_queue, array: true, default: []
+
+      t.integer :followed_ids, array: true, default: []
+      t.integer :unfollowed_ids, array: true, default: []
+      t.integer :skipped_ids, array: true, default: []
+      t.integer :next_cursor, default: 0, limit: 8
+
+      # t.boolean :following, default: false
+      # t.boolean :unfollowing, default: false
+      t.boolean :finished, default: false
+      t.boolean :busy, default: false
+
+      t.timestamp :waiting, default: nil
+
+      t.boolean :cancelled, default: false
+
+      t.timestamps null: false
     end
 
     add_index :users, :reset_password_token, unique: true
