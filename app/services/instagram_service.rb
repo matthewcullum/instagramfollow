@@ -11,7 +11,7 @@ class InstagramService
   def initialize(current_user_id, *args)
     options = args.extract_options!
     @current_user = User.find current_user_id
-    @current_user.total_allowed_follows = 420
+    @current_user.total_allowed_follows = 6000
     @client = Instagram.client client_id: ENV['INSTAGRAM_API_KEY'], client_secret: ENV['INSTAGRAM_SECRET_KEY'], client_ips: '127.0.0.1', access_token: @current_user.access_token
     # opt_total_follow_count = options[:total_follow_count]
     # @total_follow_count = opt_total_follow_count.empty? options[:total_follow_count] : @user_profile[:counts][:follow]
