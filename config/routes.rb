@@ -14,14 +14,11 @@ Rails.application.routes.draw do
   post '/jobs/cancel', to: 'job#cancel', as: 'cancel_job'
   post '/jobs/remove', to: 'job#remove', as: 'remove_job'
   get '/limits', to: 'queue#limits', as: 'limits'
+  require 'sidekiq/web'
+  mount Sidekiq::Web => '/sidekiq12345'
 
-  if Rails.env.development?
-    require 'sidekiq/web'
-    mount Sidekiq::Web => '/sidekiq'
-
-    #   get '/limits', to: 'sessions#view_instagram_api_limits'
-    #   get '/playground', to: 'queue#playground'
-  end
+  #   get '/limits', to: 'sessions#view_instagram_api_limits'
+  #   get '/playground', to: 'queue#playground'
 end
 
 # The priority is based upon order of creation: first created -> highest priority.

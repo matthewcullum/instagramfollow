@@ -132,7 +132,7 @@ class InstagramService
               subject.save
               raise $!
             else
-              @unknown_error_count += 1
+              unknown_error_count += 1
             end
           ensure
             subject.save
